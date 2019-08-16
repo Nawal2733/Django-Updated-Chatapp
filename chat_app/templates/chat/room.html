@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html class=''>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://codepen.io/emilcarlsson/pen/ZOQZaV?limit=all&page=74&q=contact+" />
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,300' rel='stylesheet'
+        type='text/css'>
+
+    <script src="https://use.typekit.net/hoy3lrg.js"></script>
+    <script>try { Typekit.load({ async: true }); } catch (e) { }</script>
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css'>
+    <link rel='stylesheet prefetch'
+        href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css'>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+
+    <style>
+        p sub {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        #frame{
+            max-height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="frame">
+        <div id="sidepanel">
+            <div id="profile">
+                <div class="wrap">
+                    <img id="profile-img" src="https://image.flaticon.com/icons/png/512/149/149071.png" class="online"
+                        alt="" />
+                    <p>{{ username|title }}</p><br>
+                    <a href="{% url 'logout' %}">Logout</a>
+                    <i class="fa fa-chevron-down expand-button" aria-hidden="true"></i>
+                    <div id="status-options">
+                        <ul>
+                            <li id="status-online" class="active"><span class="status-circle"></span>
+                                <p>Online</p>
+                            </li>
+                            <li id="status-away"><span class="status-circle"></span>
+                                <p>Away</p>
+                            </li>
+                            <li id="status-busy"><span class="status-circle"></span>
+                                <p>Busy</p>
+                            </li>
+                            <li id="status-offline"><span class="status-circle"></span>
+                                <p>Offline</p>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="expanded">
+                        <label for="twitter"><i class="fa fa-facebook fa-fw" aria-hidden="true"></i></label>
+                        <input name="twitter" type="text" value="mikeross" />
+                        <label for="twitter"><i class="fa fa-twitter fa-fw" aria-hidden="true"></i></label>
+                        <input name="twitter" type="text" value="ross81" />
+                        <label for="twitter"><i class="fa fa-instagram fa-fw" aria-hidden="true"></i></label>
+                        <input name="twitter" type="text" value="mike.ross" />
+                    </div>
+                </div>
+            </div>
+            <div id="search">
+                <label for=""><i class="fa fa-search" aria-hidden="true"></i></label>
+                <input type="text" placeholder="Search contacts..." />
+            </div>
+            <!-- <div id="contacts">
+                <ul>
+                    <li class="contact">
+                        <div class="wrap">
+                            <span class="contact-status online"></span>
+                            <img src="https://image.flaticon.com/icons/png/512/149/149071.png" alt="" />
+                            <div class="meta">
+                                <p class="name">Louis Litt</p>
+                                <p class="preview">You just got LITT up, Mike.</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="contact active">
+                        <div class="wrap">
+                            <span class="contact-status busy"></span>
+                            <img src="https://image.flaticon.com/icons/png/512/149/149071.png" alt="" />
+                            <div class="meta">
+                                <p class="name">Harvey Specter</p>
+                                <p class="preview">Wrong. You take the gun, or you pull out a bigger one. Or, you call
+                                    their bluff. Or,
+                                    you do any one of a hundred and forty six other things.</p>
+                            </div>
+                        </div>
+                    </li>
+
+                </ul>
+            </div> -->
+            <div id="bottom-bar">
+                <button id="addcontact"><i class="fa fa-sign-in fa-fw" aria-hidden="true"></i> 
+                    <a href="{% url 'logout' %}" style="color: #ffff;text-decoration: none">Log Out</a>
+                </button>
+                <button id="settings"><i class="fa fa-cog fa-fw" aria-hidden="true"></i> <span>Settings</span></button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="contact-profile">
+                <img src="https://image.flaticon.com/icons/png/512/149/149071.png" alt="" />
+                <p>{{ username|title }}</p>
+                <div class="social-media">
+                    <i class="fa fa-facebook" aria-hidden="true"></i>
+                    <i class="fa fa-twitter" aria-hidden="true"></i>
+                    <i class="fa fa-instagram" aria-hidden="true"></i>
+                </div>
+            </div>
+            <!-- Chat Log -->
+            <div class="messages">
+                <ul id="chat-log">
+
+                </ul>
+            </div>
+            <!-- Send Message -->
+            <div class="message-input">
+                <div class="wrap">
+                    <input type="text" id="chat-message-input" placeholder="Write your message..." />
+                    <i class="fa fa-paperclip attachment" aria-hidden="true"></i>
+                    <button class="submit" id="chat-message-submit"><i class="fa fa-paper-plane"
+                            aria-hidden="true"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
+<script src="{% static 'script.js' %}"></script>
+<script src="{% static 'reconnecting-websocket.js' %}"></script>
+<script>
+    var roomName = {{ room_name_json }};
+    var username = {{ username }}
+
+    var chatSocket = new ReconnectingWebSocket(
+        'ws://' + window.location.host +
+        '/ws/chat/' + roomName + '/');
+
+
+    chatSocket.onopen = function (e) {
+        fetchMessages();
+    }
+
+    function fetchMessages() {
+        chatSocket.send(JSON.stringify({ 'command': 'fetch_messages' }))
+    }
+
+    chatSocket.onmessage = function (e) {
+        var data = JSON.parse(e.data);
+        if (data['command'] === 'messages') {
+            for (let i = data['messages'].length - 1; i >= 0; i--) {
+                console.log(data)
+                createMessage(data['messages'][i]);
+            }
+        } else if (data['command'] === 'new_message') {
+            createMessage(data['message'])
+        }
+
+        // var message = data['message'];
+        // var author = message['author']
+        // console.log(message)
+        // document.querySelector('#chat-log').value += (message.content + '\n');
+    };
+
+
+
+    chatSocket.onclose = function (e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-input').focus();
+    document.querySelector('#chat-message-input').onkeyup = function (e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function (e) {
+        var messageInputDom = document.querySelector('#chat-message-input');
+        var message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+            'command': 'new_message',
+            'message': message,
+            'from': username
+        }));
+
+        messageInputDom.value = '';
+    };
+
+
+    // Create Message 
+    function createMessage(data) {
+        console.log(data)
+        // document.querySelector('#chat-log').value += (data.content + '\n');
+        var author = data['author']
+        var msgListTag = document.createElement('li');
+        var imgTag = document.createElement('img')
+        var pTag = document.createElement('p')
+        var smallTag = document.createElement('sub')
+        var brTag = document.createElement('br')
+
+        pTag.textContent = data.content + ' ( send by: ' + data.author + " )";
+        var date = new Date(data.timestamp)
+        console.log(date.getHours())
+        // smallTag.textContent = date.getDate()+','+date.getMonth()+','+ date.getHours()+":"+date.getMinutes()
+        smallTag.textContent = new Date(data.timestamp)
+        pTag.appendChild(brTag)
+        pTag.appendChild(smallTag)
+        imgTag.src = 'https://image.flaticon.com/icons/png/512/149/149071.png'
+        imgTag.title = data.author
+        if (author === username) {
+            msgListTag.className = 'sent';
+        } else {
+            msgListTag.className = 'replies';
+        }
+        msgListTag.appendChild(imgTag);
+        msgListTag.appendChild(pTag);
+        document.querySelector('#chat-log').appendChild(msgListTag);
+
+    }
+
+
+</script>
+
+</html>
